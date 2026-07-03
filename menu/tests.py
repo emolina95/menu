@@ -9,7 +9,7 @@ from .models import Category, Ingredient, MenuItem
 class MenuItemAPITest(APITestCase):
     def setUp(self):
         self.appetizers = Category.objects.create(name="Appetizers")
-        # Ingredientes reales que aparecen en el menú
+        # Real ingredients
         self.bacon = Ingredient.objects.create(name="Bacon")
         self.gorgonzola = Ingredient.objects.create(name="Gorgonzola")
         self.tomato = Ingredient.objects.create(name="Tomato")
@@ -36,14 +36,14 @@ class MenuItemAPITest(APITestCase):
 
         res = self.client.get(f"/api/v1/menu-items/{item.id}/")
         self.assertEqual(res.status_code, status.HTTP_200_OK)
-        # tu serializer devuelve IDs, no objetos anidados
+        # serializer returns IDs, not nested objects
         self.assertEqual(
             set(res.data["ingredients"]),
             {self.bacon.id, self.gorgonzola.id},
         )
 
     def test_filter_by_ingredient(self):
-        # Dos platos llevan gorgonzola, uno no → el filtro debe excluir el tercero
+        # Two items have gorgonzola, one doesn't → the filter should exclude the third
         iceberg = MenuItem.objects.create(
             name="Iceberg Wedge Salad with House Cured Bacon",
             price=Decimal("7.50"), category=self.appetizers,
@@ -87,7 +87,6 @@ class MenuItemAPITest(APITestCase):
         self.assertEqual(names, {"Kale Salad"})
 
     def test_negative_price_is_rejected(self):
-        # requiere el get_serializer_class corregido en el viewset
         res = self.client.post("/api/v1/menu-items/", {
             "name": "Invalid Appetizer",
             "price": "-5.00",
@@ -106,5 +105,4 @@ class CategoryAPITest(APITestCase):
         )
         res = self.client.get(f"/api/v1/categories/{appetizers.id}/")
         self.assertEqual(res.status_code, status.HTTP_200_OK)
-        # 'items' también sale como lista de IDs
         self.assertEqual(res.data["items"], [item.id])
